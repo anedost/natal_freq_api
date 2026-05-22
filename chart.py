@@ -42,6 +42,13 @@ SIGN_SEMITONE = {
     "Sag":8, "Cap":9, "Aqu":10,"Pis":11,
 }
 
+SIGN_FULL_NAME = {
+    "Ari": "Aries",       "Tau": "Taurus",      "Gem": "Gemini",
+    "Can": "Cancer",      "Leo": "Leo",          "Vir": "Virgo",
+    "Lib": "Libra",       "Sco": "Scorpio",      "Sag": "Sagittarius",
+    "Cap": "Capricorn",   "Aqu": "Aquarius",     "Pis": "Pisces",
+}
+
 PLANET_COLOR = {
     "Sun":    (255,200, 50), "Moon":   (200,210,255),
     "Mercury":(180,180,200), "Venus":  (255,180,120),
@@ -130,7 +137,7 @@ def build_chart(year, month, day, hour, minute, city, country) -> dict:
     for name, obj in raw.items():
         deg       = float(obj.position)
         sign_abbr = obj.sign[:3]
-        sign      = obj.sign
+        sign      = SIGN_FULL_NAME.get(sign_abbr, sign_abbr)
         chart[name] = {
             "freq":  calc_freq(name, sign_abbr, deg),
             "bpm":   calc_bpm(name),
