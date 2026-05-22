@@ -29,9 +29,10 @@ class GenerateRequest(BaseModel):
     year:   int = Field(..., ge=1900, le=2100, example=1990)
     month:  int = Field(..., ge=1,    le=12,   example=3)
     day:    int = Field(..., ge=1,    le=31,   example=15)
-    hour:   int = Field(12,  ge=0,    le=23,   example=14)
-    minute: int = Field(0,   ge=0,    le=59,   example=30)
-    city:   str = Field(..., min_length=2,     example="Kyiv")
+    hour:    int = Field(12,  ge=0,    le=23,   example=14)
+    minute:  int = Field(0,   ge=0,    le=59,   example=30)
+    city:    str = Field(..., min_length=2,     example="Kyiv")
+    country: str = Field(..., min_length=2,     example="Ukraine")
 
 
 @app.get("/health")
@@ -47,7 +48,7 @@ def generate(req: GenerateRequest):
         raise HTTPException(400, f"Invalid date: {e}")
     try:
         planets = m.build_chart(req.year, req.month, req.day,
-                                req.hour, req.minute, req.city)
+                                req.hour, req.minute, req.city, req.country)
     except ValueError as e:
         raise HTTPException(404, str(e))
     except Exception as e:
@@ -56,6 +57,7 @@ def generate(req: GenerateRequest):
     return {
         "birthdate": birthdate.strftime("%d.%m.%Y"),
         "city":      req.city,
+        "country":   req.country,
         "tuning":    "432 Hz",
         "theory":    "Pythagorean • Cousto 1978",
         "planets": {

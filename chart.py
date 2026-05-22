@@ -85,26 +85,20 @@ def save_cache(cache: dict):
     CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False, indent=2))
 
 
-def resolve_city(city: str) -> tuple:
-    """City name (any language) → (lat, lng, timezone). Results are cached."""
+def resolve_city(city: str, country: str) -> tuple:
+    """City name + country (English) → (lat, lng, timezone). Results are cached."""
     cache = load_cache()
-    key   = city.strip().lower()
+    key   = f"{city.strip().lower()},{country.strip().lower()}"
     if key in cache:
         d = cache[key]
         return d['lat'], d['lng'], d['tz']
 
     geolocator = Nominatim(user_agent="natal_freq_api")
     tf = TimezoneFinder()
-    location = geolocator.geocode(city)
-    if not location:
-        for suffix in [", Ukraine", ", Russia", ", Poland", ", Germany"]:
-            location = geolocator.geocode(city + suffix)
-            if location:
-                break
-
+    location = geolocator.geocode(f"{city}, {country}")
     if not location:
         raise ValueError(
-            f"City '{city}' not found. Try a more specific name, e.g. 'Kharkiv, Ukraine'."
+            f"City '{city}' in '{country}' not found. Try a more specific name."
         )
 
     lat = location.latitude
@@ -118,9 +112,9 @@ def resolve_city(city: str) -> tuple:
     return lat, lng, tz
 
 
-def build_chart(year, month, day, hour, minute, city) -> dict:
+def build_chart(year, month, day, hour, minute, city, country) -> dict:
     """Build a natal chart and return planetary frequencies for all 10 planets."""
-    lat, lng, tz = resolve_city(city)
+    lat, lng, tz = resolve_city(city, country)
     subj = AstrologicalSubject(
         "chart", year, month, day, hour, minute,
         lng=lng, lat=lat, tz_str=tz, city=city
@@ -134,10 +128,11 @@ def build_chart(year, month, day, hour, minute, city) -> dict:
     }
     chart = {}
     for name, obj in raw.items():
-        deg  = float(obj.position)
-        sign = obj.sign[:3]
+        deg       = float(obj.position)
+        sign_abbr = obj.sign[:3]
+        sign      = obj.sign
         chart[name] = {
-            "freq":  calc_freq(name, sign, deg),
+            "freq":  calc_freq(name, sign_abbr, deg),
             "bpm":   calc_bpm(name),
             "sign":  sign,
             "deg":   deg,
