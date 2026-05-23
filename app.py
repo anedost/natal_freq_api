@@ -31,8 +31,11 @@ class GenerateRequest(BaseModel):
     day:    int = Field(..., ge=1,    le=31,   example=15)
     hour:   int   = Field(12,  ge=0,    le=23,    example=14)
     minute: int   = Field(0,   ge=0,    le=59,    example=30)
-    lat:    float = Field(..., ge=-90,  le=90,    example=50.4501)
-    lng:    float = Field(..., ge=-180, le=180,   example=30.5234)
+    lat:     float = Field(..., ge=-90,  le=90,    example=50.4501)
+    lng:     float = Field(..., ge=-180, le=180,   example=30.5234)
+    city:    str | None = Field(None, example="Donetsk")
+    state:   str | None = Field(None, example="Donetsk Oblast")
+    country: str | None = Field(None, example="Ukraine")
 
 
 @app.get("/health")
@@ -58,6 +61,9 @@ def generate(req: GenerateRequest):
         "birthdate": birthdate.strftime("%d.%m.%Y"),
         "lat":       req.lat,
         "lng":       req.lng,
+        "city":      req.city,
+        "state":     req.state,
+        "country":   req.country,
         "tuning":    "432 Hz",
         "theory":    "Pythagorean • Cousto 1978",
         "planets": {
