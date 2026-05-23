@@ -14,10 +14,8 @@ os.environ['SSL_CERT_FILE']      = certifi.where()
 os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
 
 from kerykeion import AstrologicalSubject
-from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
-import math, json
-from pathlib import Path
+import math
 
 # Planetary base frequencies (Hans Cousto, 1978)
 PLANET_BASE_FREQ = {
@@ -60,8 +58,6 @@ PLANET_COLOR = {
 # 432 Hz tuning (Cousto). Standard A=440 Hz was adopted in 1939.
 TUNING_432 = 432 / 440
 
-CACHE_FILE = Path("cities_cache.json")
-
 
 def calc_freq(planet: str, sign: str, degree: float) -> float:
     """
@@ -82,49 +78,20 @@ def calc_bpm(planet: str) -> float:
     return bpm
 
 
-def load_cache() -> dict:
-    if CACHE_FILE.exists():
-        return json.loads(CACHE_FILE.read_text())
-    return {}
-
-
-def save_cache(cache: dict):
-    CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False, indent=2))
-
-
-def resolve_city(city: str, country: str) -> tuple:
-    """City name + country (English) → (lat, lng, timezone). Results are cached."""
-    cache = load_cache()
-    key   = f"{city.strip().lower()},{country.strip().lower()}"
-    if key in cache:
-        d = cache[key]
-        return d['lat'], d['lng'], d['tz']
-
-    geolocator = Nominatim(user_agent="natal_freq_api")
-    tf = TimezoneFinder()
-    location = geolocator.geocode(f"{city}, {country}")
-    if not location:
-        raise ValueError(
-            f"City '{city}' in '{country}' not found. Try a more specific name."
-        )
-
-    lat = location.latitude
-    lng = location.longitude
-    tz  = tf.timezone_at(lat=lat, lng=lng)
+def resolve_timezone(lat: float, lng: float) -> str:
+    """Coordinates → IANA timezone string via local shapefile (no network)."""
+    tz = TimezoneFinder().timezone_at(lat=lat, lng=lng)
     if not tz:
-        raise ValueError(f"Could not determine timezone for '{city}'.")
-
-    cache[key] = {"address": location.address, "lat": lat, "lng": lng, "tz": tz}
-    save_cache(cache)
-    return lat, lng, tz
+        raise ValueError(f"Could not determine timezone for coordinates ({lat}, {lng}).")
+    return tz
 
 
-def build_chart(year, month, day, hour, minute, city, country) -> dict:
+def build_chart(year, month, day, hour, minute, lat: float, lng: float) -> dict:
     """Build a natal chart and return planetary frequencies for all 10 planets."""
-    lat, lng, tz = resolve_city(city, country)
+    tz = resolve_timezone(lat, lng)
     subj = AstrologicalSubject(
         "chart", year, month, day, hour, minute,
-        lng=lng, lat=lat, tz_str=tz, city=city
+        lng=lng, lat=lat, tz_str=tz
     )
     raw = {
         "Sun":     subj.sun,     "Moon":    subj.moon,
