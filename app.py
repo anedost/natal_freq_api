@@ -33,9 +33,9 @@ class GenerateRequest(BaseModel):
     minute: int   = Field(0,   ge=0,    le=59,    example=30)
     lat:     float = Field(..., ge=-90,  le=90,    example=50.4501)
     lng:     float = Field(..., ge=-180, le=180,   example=30.5234)
-    city:    str | None = Field(None, example="Donetsk")
-    state:   str | None = Field(None, example="Donetsk Oblast")
-    country: str | None = Field(None, example="Ukraine")
+    city:    str = Field(..., min_length=2, example="Donetsk")
+    state:   str = Field(..., min_length=2, example="Donetsk Oblast")
+    country: str = Field(..., min_length=2, example="Ukraine")
 
 
 @app.get("/health")
