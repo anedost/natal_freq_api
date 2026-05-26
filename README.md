@@ -6,8 +6,8 @@ Generates a Pythagorean planetary frequency matrix from a natal chart.
 
 - **Pythagoras**: 12 zodiac signs = 12 chromatic semitones.
 - **Hans Cousto (1978)**: planetary base frequencies derived from orbital periods via octave transposition.
-- **Formula**: `freq = base × 2^(semitone/12) × 2^(degree/29/12)`
-- **Tuning**: 432 Hz
+- **Formula**: `freq = base × 2^(semitone/12) × 2^(degree/29/12) × (432/440)`
+- **Tuning**: 432 Hz (via `432/440` coefficient)
 
 ## Endpoints
 
@@ -21,7 +21,11 @@ Generates a Pythagorean planetary frequency matrix from a natal chart.
   "day": 15,
   "hour": 14,
   "minute": 30,
-  "city": "Kyiv"
+  "lat": 50.4501,
+  "lng": 30.5234,
+  "city": "Kyiv",
+  "state": "Kyiv City",
+  "country": "Ukraine"
 }
 ```
 
@@ -31,13 +35,38 @@ Generates a Pythagorean planetary frequency matrix from a natal chart.
 ```json
 {
   "birthdate": "15.03.1990",
+  "lat": 50.4501,
+  "lng": 30.5234,
   "city": "Kyiv",
-  "tuning": "432 Hz",
-  "theory": "Pythagorean • Cousto 1978",
+  "state": "Kyiv City",
+  "country": "Ukraine",
   "planets": {
-    "Sun":  { "freq": 245.70, "bpm": 3.94,  "sign": "Pis", "deg": 24.5, "color": [255, 200, 50] },
-    "Moon": { "freq": 315.45, "bpm": 52.71, "sign": "Sco", "deg": 7.2,  "color": [200, 210, 255] }
+    "Sun":  { "freq": 245.70, "bpm": 3.94,  "sign": "Pisces", "deg": 24.5, "color": [255, 200, 50] },
+    "Moon": { "freq": 315.45, "bpm": 52.71, "sign": "Scorpio", "deg": 7.2,  "color": [200, 210, 255] }
   }
+}
+```
+
+**Error Responses:**
+
+`400 Bad Request` (invalid calendar date)
+```json
+{
+  "detail": "Invalid date: day is out of range for month"
+}
+```
+
+`404 Not Found` (chart/timezone resolution issue)
+```json
+{
+  "detail": "Could not determine timezone for coordinates (0.0, 0.0)."
+}
+```
+
+`500 Internal Server Error` (unexpected chart processing error)
+```json
+{
+  "detail": "Chart error: <error message>"
 }
 ```
 
@@ -48,6 +77,8 @@ Returns `{"status": "ok"}`.
 ## Run Locally
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app:app --reload --port 8000
 ```
@@ -64,7 +95,7 @@ uvicorn app:app --host 0.0.0.0 --port $PORT
 |---|---|
 | FastAPI | API framework |
 | kerykeion | Swiss Ephemeris natal chart |
-| geopy + timezonefinder | City geocoding with local cache |
+| timezonefinder | Coordinates -> local IANA timezone |
 | certifi | SSL certificates |
 
 ## Planet Base Frequencies (Cousto, 432 Hz tuning)
