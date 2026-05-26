@@ -64,8 +64,6 @@ def generate(req: GenerateRequest):
         "city":      req.city,
         "state":     req.state,
         "country":   req.country,
-        "tuning":    "432 Hz",
-        "theory":    "Pythagorean • Cousto 1978",
         "planets": {
             name: {
                 "freq":  d["freq"],
